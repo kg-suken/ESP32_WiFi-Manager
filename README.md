@@ -2,6 +2,12 @@
 
 ESP32用の簡単WiFi設定ライブラリです。1行のインクルードと1行の初期化で、美しいWebインターフェースによるWiFi設定機能を提供します。
 
+
+![IMG_20250730_191956](https://github.com/user-attachments/assets/79ce0459-1ba0-4d7c-90df-20e2aa88c774)
+
+
+
+
 ## 特徴
 
 - **簡単使用**: 1行のインクルードと1行の初期化
@@ -13,18 +19,23 @@ ESP32用の簡単WiFi設定ライブラリです。1行のインクルードと1
 - **キャプティブポータル**: WiFi接続時に自動的に設定ページを表示
 - **動的デバイス名**: カスタマイズ可能なデバイス名
 
-## インストール
 
+
+## インストール
+### 通常の方法
+ArduinoIDEの上部メニュー`スケッチ>ライブラリのインクルード>zip形式のライブラリをインストール`からインストールできます。
+
+### または以下の方法
 1. `SukenESPWiFi.h` と `SukenESPWiFi.cpp` をArduinoプロジェクトフォルダにコピー
 2. 必要なライブラリをインストール：
    - ArduinoJson
    - ESP32開発ボード
 
 ## 基本的な使用方法
-
+書き込み時にFS用の領域を確保することを忘れないでください。
 ### 通常の使用方法
 ```cpp
-#include "SukenESPWiFi.h"
+#include <SukenESPWiFi.h>
 
 // デバイス名を指定してライブラリを初期化
 SukenESPWiFi wifiManager("MyDevice");
@@ -48,60 +59,6 @@ void loop() {
     Serial.println("デバイスMAC: " + wifiManager.getDeviceMAC());
   }
   delay(5000);
-}
-```
-
-### マクロを使用した簡単な方法
-```cpp
-#include "SukenESPWiFi.h"
-
-SukenESPWiFi wifiManager("MyDevice");
-
-void setup() {
-  Serial.begin(115200);
-  wifiManager.init();
-}
-
-void loop() {
-  // マクロを使用して簡単に情報を取得
-  Serial.println("SSID: " + SUKEN_WIFI_SSID());
-  Serial.println("MAC: " + SUKEN_WIFI_MAC());
-  Serial.println("IP: " + SUKEN_WIFI_IP());
-  Serial.println("接続状態: " + (SUKEN_WIFI_CONNECTED() ? "接続済み" : "未接続"));
-  delay(3000);
-}
-```
-
-### Serialコマンドによる設定管理
-```cpp
-#include "SukenESPWiFi.h"
-
-SukenESPWiFi wifiManager("MyDevice");
-
-void setup() {
-  Serial.begin(115200);
-  wifiManager.init();
-  
-  Serial.println("=== WiFi Manager Ready ===");
-  Serial.println("Commands: clear, clear_wifi, clear_network, info, status, help");
-}
-
-void loop() {
-  // Serialコマンド処理
-  if (Serial.available()) {
-    String command = Serial.readStringUntil('\n');
-    command.trim();
-    command.toLowerCase();
-    
-    if (command == "clear") {
-      wifiManager.clearAllSettings();
-      ESP.restart();
-    }
-    else if (command == "info") {
-      Serial.println(wifiManager.getNetworkInfo());
-    }
-    // その他のコマンド...
-  }
 }
 ```
 
@@ -205,55 +162,8 @@ WiFi設定ファイルのみを削除します。
 #### `String getNetworkInfo()`
 包括的なネットワーク情報を取得します。
 
-## Serialコマンド
 
-### 利用可能なコマンド
 
-| コマンド | 説明 |
-|---------|------|
-| `clear` | すべての設定をクリアしてデバイスを再起動 |
-| `clear_wifi` | WiFi設定のみをクリア |
-| `clear_network` | ネットワーク設定のみをクリア |
-| `info` | 詳細なネットワーク情報を表示 |
-| `status` | 現在の接続状態を表示 |
-| `help` | 利用可能なコマンドの一覧を表示 |
-
-### 使用例
-```
-> clear
-Clearing all settings...
-All settings cleared. Device will restart...
-
-> info
-=== Network Information ===
-Status: Connected
-SSID: MyWiFi
-IP Address: 192.168.1.105
-Gateway: 192.168.1.1
-Subnet Mask: 255.255.255.0
-DNS: 8.8.8.8, 8.8.4.4
-Signal Strength: -45 dBm
-
-=== Stored Settings ===
-Stored SSID: MyWiFi
-Use Static IP: Yes
-Static IP: 192.168.1.200
-Gateway: 192.168.1.1
-Subnet: 255.255.255.0
-Primary DNS: 8.8.8.8
-Secondary DNS: 8.8.4.4
-
-=== Device Information ===
-Device Name: MyDevice
-MAC Address: AA:BB:CC:DD:EE:FF
-
-> status
-=== Connection Status ===
-Connected: Yes
-SSID: MyWiFi
-IP: 192.168.1.105
-DNS: 8.8.8.8, 8.8.4.4
-```
 
 ## 動作フロー
 
@@ -308,7 +218,7 @@ secondaryDNS(8, 8, 4, 4)
 ### よくある問題
 
 1. **コンパイルエラー**
-   - ArduinoJsonライブラリがインストールされているか確認
+   - 必要ライブラリがインストールされているか確認
    - ESP32開発ボードが選択されているか確認
 
 2. **APモードで接続できない**
@@ -327,34 +237,11 @@ secondaryDNS(8, 8, 4, 4)
    - Serial Monitorのボーレートが115200に設定されているか確認
    - コマンドの後に改行（Enter）を送信しているか確認
 
-## ファイル構造
 
-```
-プロジェクトフォルダ/
-├── SukenESPWiFi.h          # ヘッダーファイル
-├── SukenESPWiFi.cpp        # 実装ファイル
-├── WiFi.ino                # メインスケッチ例
-└── README_SukenESPWiFi.md  # このファイル
-```
 
-## ライセンス
+## 制作
+**sskrc**
 
-このライブラリはMITライセンスの下で提供されています。
+---
 
-## 更新履歴
-
-- v1.2.0: 詳細設定機能とSerialコマンド追加
-  - 静的IP、ゲートウェイ、DNS設定機能
-  - Serialコマンドによる設定管理
-  - 設定参照機能の追加
-  - 包括的なネットワーク情報表示
-
-- v1.1.0: 設定管理機能追加
-  - 設定ファイルクリア機能
-  - 設定参照機能
-  - ネットワーク情報表示機能
-
-- v1.0.0: 初回リリース
-  - 基本的なWiFi設定機能
-  - 美しいWebインターフェース
-  - 自動WiFi検出機能 
+今後の改良に関する提案やバグ報告は、お気軽にIssueを通してご連絡ください。
