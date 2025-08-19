@@ -19,8 +19,7 @@
 #define SUKEN_WIFI_IP() wifiManager.getLocalIP()
 #define SUKEN_WIFI_CONNECTED() wifiManager.isConnected()
 
-// Forward declaration for the static wrapper function
-void WebServerTask(void* args);
+// WebServerタスクエントリはクラスのstaticメソッドを使用
 
 class SukenESPWiFi {
 private:
@@ -57,7 +56,7 @@ private:
     char* getMAC();
 
 public:
-    static void WebServer(void* args);
+    static void SukenESPWiFi_TaskMain(void* args);
     SukenESPWiFi(const String& deviceName = "ESP-WiFi");
     void init();
     bool isConnected();

@@ -74,7 +74,7 @@ void SukenESPWiFi::APStart() {
     WiFi.softAP(WiFiName.c_str());
     delay(200);
     WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-    xTaskCreatePinnedToCore(WebServerTask, "WebServer", 8192, this, 2, &thp[2], 1);
+    xTaskCreatePinnedToCore(SukenESPWiFi::SukenESPWiFi_TaskMain, "SukenESPWiFi_TaskMain", 8192, this, 2, &thp[2], 1);
 }
 
 void SukenESPWiFi::ScanWiFi() {
@@ -616,12 +616,9 @@ void SukenESPWiFi::WiFiListAPI() {
     server.send(200, "application/json", json);
 }
 
-void WebServerTask(void* args) {
-    SukenESPWiFi* instance = (SukenESPWiFi*)args;
-    instance->WebServer(args);
-}
+// グローバルのラッパー関数は不要になりました（staticメソッドを直接渡す）
 
-void SukenESPWiFi::WebServer(void* args) {
+void SukenESPWiFi::SukenESPWiFi_TaskMain(void* args) {
     SukenESPWiFi* instance = (SukenESPWiFi*)args;
     
     Serial.print("mDNS server instancing");
