@@ -219,8 +219,7 @@ void SukenESPWiFi::WiFiSettingPage() {
 <body>
 <h1 id="deviceNameHeader">WiFi設定</h1>
 <div class="description">
-    <p>デバイスをネットワークに接続するために、ご自宅のWiFiを設定してください。</p>
-    <p>設定した情報は内部データベースにのみ保存されます。</p>
+    <p>WiFiを設定してください。</p>
 </div>
 <form id="wifiForm">
     <div>
