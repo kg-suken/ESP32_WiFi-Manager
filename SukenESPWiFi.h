@@ -19,13 +19,13 @@
 #define SUKEN_WIFI_IP() wifiManager.getLocalIP()
 #define SUKEN_WIFI_CONNECTED() wifiManager.isConnected()
 
-// WebServerタスクエントリはクラスのstaticメソッドを使用
+namespace SukenWiFiLib {
 
 class SukenESPWiFi {
 private:
     String DeviceName;
     String WiFiName;
-    WebServer server;
+    ::WebServer server;
     IPAddress apIP;
     String apip;
     DNSServer dnsServer;
@@ -54,11 +54,13 @@ private:
     void readNetworkSettings();
     void saveNetworkSettings();
     char* getMAC();
+    bool isValidHostname(const String& hostname);
 
 public:
     static void SukenESPWiFi_TaskMain(void* args);
     SukenESPWiFi(const String& deviceName = "ESP-WiFi");
     void init();
+    void init(const String& deviceName);
     bool isConnected();
     String getLocalIP();
     String getMACAddress();
@@ -82,5 +84,9 @@ public:
     String getCurrentDNS();
     String getNetworkInfo();
 };
+
+} // namespace SukenWiFiLib
+
+extern SukenWiFiLib::SukenESPWiFi SukenWiFi;
 
 #endif 

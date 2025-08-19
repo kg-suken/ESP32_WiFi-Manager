@@ -1,8 +1,12 @@
 #include "SukenESPWiFi.h"
 
+// Define the global instance with a default device name
+SukenWiFiLib::SukenESPWiFi SukenWiFi("ESP-WiFi-Manager");
+
+namespace SukenWiFiLib {
+
+// Constructor implementation remains inside the namespace
 SukenESPWiFi::SukenESPWiFi(const String& deviceName) : 
-    DeviceName(deviceName),
-    WiFiName(deviceName),
     server(80),
     apIP(192, 168, 1, 100),
     apip("192.168.1.100"),
@@ -14,6 +18,22 @@ SukenESPWiFi::SukenESPWiFi(const String& deviceName) :
     subnet(255, 255, 255, 0),
     primaryDNS(8, 8, 8, 8),
     secondaryDNS(8, 8, 4, 4) {
+    if (isValidHostname(deviceName)) {
+        DeviceName = deviceName;
+        WiFiName = deviceName;
+    } else {
+        Serial.println("[SukenESPWiFi] ERROR: Invalid characters in default device name. Using 'ESP-WiFi-Manager'.");
+        DeviceName = "ESP-WiFi-Manager";
+        WiFiName = "ESP-WiFi-Manager";
+    }
+}
+
+void SukenESPWiFi::init(const String& deviceName) {
+    if (deviceName != "") {
+        DeviceName = deviceName;
+        WiFiName = deviceName;
+    }
+    init();
 }
 
 void SukenESPWiFi::init() {
@@ -655,38 +675,37 @@ void SukenESPWiFi::SukenESPWiFi_TaskMain(void* args) {
     }
 }
 
+// Removed erroneous nested namespace and duplicate global instance
+
+bool SukenESPWiFi::isValidHostname(const String& hostname) {
+    if (hostname.length() < 1 || hostname.length() > 63) {
+        return false;
+    }
+    for (char c : hostname) {
+        if (!isAlphaNumeric(c) && c != '-') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Removed duplicate constructor and init implementations (already defined above)
+
 void SukenESPWiFi::connectToWiFi() {
     String ssid;
     String password;
     WiFi.mode(WIFI_STA);
     readWiFiCredentials(ssid, password);
-    Serial.println("SSID: " + ssid);
-    Serial.println("Password: " + password);
-    Serial.println("SSID Length: " + String(ssid.length()));
-    Serial.println("Password Length: " + String(password.length()));
     
-    // 静的IP設定を適用（WiFi.begin()の前に実行）
     if (useStaticIP) {
-        Serial.println("Applying static IP configuration...");
-        Serial.println("Static IP: " + staticIP.toString());
-        Serial.println("Gateway: " + gateway.toString());
-        Serial.println("Subnet: " + subnet.toString());
-        Serial.println("Primary DNS: " + primaryDNS.toString());
-        Serial.println("Secondary DNS: " + secondaryDNS.toString());
-        
         if (!WiFi.config(staticIP, gateway, subnet, primaryDNS, secondaryDNS)) {
             Serial.println("Static IP configuration failed");
-        } else {
-            Serial.println("Static IP configuration applied successfully");
         }
-    } else {
-        Serial.println("Using DHCP configuration");
     }
     
-    WiFi.begin(ssid, password);
-    WiFi.setHostname(WiFiName.c_str());
+    WiFi.begin(ssid.c_str(), password.c_str());
+    WiFi.setHostname(DeviceName.c_str());
     
-    Serial.println("Connecting to WiFi...");
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20) {
         delay(500);
@@ -698,9 +717,12 @@ void SukenESPWiFi::connectToWiFi() {
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println("Connected to WiFi");
         Serial.println("IP Address: " + WiFi.localIP().toString());
-        Serial.println("Gateway: " + WiFi.gatewayIP().toString());
-        Serial.println("Subnet Mask: " + WiFi.subnetMask().toString());
-        Serial.println("DNS: " + WiFi.dnsIP().toString());
+        if (!MDNS.begin(DeviceName.c_str())) {
+            Serial.println("Error setting up MDNS responder!");
+        } else {
+            Serial.println("mDNS responder started. You can now access the device at http://" + DeviceName + ".local");
+            MDNS.addService("http", "tcp", 80);
+        }
     } else {
         Serial.println("Failed to connect to WiFi");
     }
@@ -997,3 +1019,5 @@ String SukenESPWiFi::getNetworkInfo() {
     
     return info;
 } 
+
+} // namespace SukenWiFiLib 
