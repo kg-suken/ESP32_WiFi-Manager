@@ -61,6 +61,10 @@ public:
     SukenESPWiFi(const String& deviceName = "ESP-WiFi");
     void init();
     void init(const String& deviceName);
+    void onClientConnect(std::function<void()> callback);
+    void onEnterSetupMode(std::function<void()> callback);
+    std::function<void()> clientConnectedCallback;
+    std::function<void()> setupModeCallback;
     bool isConnected();
     String getLocalIP();
     String getMACAddress();

@@ -1,10 +1,26 @@
 #include <SukenESPWiFi.h>
 
+// Callback function to be called when a client connects to the AP
+void clientConnected() {
+    Serial.println("Client has connected to the AP!");
+}
+
+// Callback function to be called when entering setup mode
+void enterSetupMode() {
+    Serial.println("Entering setup mode.");
+    // You can add code here to indicate setup mode, e.g., by blinking an LED.
+}
+
 // ライブラリがグローバルオブジェクト "SukenWiFi" を提供します。
 // 自分でインスタンスを作成する必要はありません。
 
 void setup() {
     Serial.begin(115200);
+
+    // Register callbacks
+    SukenWiFi.onClientConnect(clientConnected); 
+    SukenWiFi.onEnterSetupMode(enterSetupMode);
+
     SukenWiFi.init("MyDevice"); // デバイス名を指定して初期化
     
     // 現在の設定を確認

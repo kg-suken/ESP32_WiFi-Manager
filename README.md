@@ -127,6 +127,36 @@ WiFi接続状態を返します。
 #### `String getDeviceMAC()`
 デバイスのMACアドレスを返します（getMACAddress()と同じ）。
 
+### コールバック
+特定のイベントが発生した際に、任意の関数を呼び出すためのコールバック機能を提供します。
+
+#### `void onEnterSetupMode(std::function<void()> callback)`
+WiFiへの接続に失敗し、セットアップモード（APモード）に移行する際に呼び出されるコールバック関数を登録します。デバイスの状態をLEDなどでユーザーに通知するのに便利です。
+```cpp
+void setupModeCallback() {
+  // 例: LEDを点滅させて設定モードであることを示す
+  Serial.println("Entering setup mode.");
+}
+
+void setup() {
+  SukenWiFi.onEnterSetupMode(setupModeCallback);
+  SukenWiFi.init("MyDevice");
+}
+```
+
+#### `void onClientConnect(std::function<void()> callback)`
+デバイスがAPモードで動作しているときに、スマートフォンなどのクライアントがそのAPに接続した際に呼び出されるコールバック関数を登録します。
+```cpp
+void clientConnectedCallback() {
+  Serial.println("Client connected to the AP!");
+}
+
+void setup() {
+  SukenWiFi.onClientConnect(clientConnectedCallback);
+  SukenWiFi.init("MyDevice");
+}
+```
+
 ### 設定管理メソッド
 
 #### `void clearAllSettings()`

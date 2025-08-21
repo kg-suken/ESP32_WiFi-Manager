@@ -27,6 +27,14 @@ SukenESPWiFi::SukenESPWiFi(const String& deviceName) :
     }
 }
 
+void SukenESPWiFi::onClientConnect(std::function<void()> callback) {
+    clientConnectedCallback = callback;
+}
+
+void SukenESPWiFi::onEnterSetupMode(std::function<void()> callback) {
+    setupModeCallback = callback;
+}
+
 void SukenESPWiFi::init(const String& deviceName) {
     if (deviceName != "") {
         DeviceName = deviceName;
@@ -36,6 +44,14 @@ void SukenESPWiFi::init(const String& deviceName) {
 }
 
 void SukenESPWiFi::init() {
+    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
+        if (event == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
+            Serial.println("Client connected to AP");
+            if (SukenWiFi.clientConnectedCallback) {
+                SukenWiFi.clientConnectedCallback();
+            }
+        }
+    });
     client.setInsecure();
     if (!SPIFFS.begin(false)) {
         Serial.println("SPIFFS mount failed, attempting to format...");
@@ -83,6 +99,9 @@ void SukenESPWiFi::init() {
     
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi接続失敗");
+        if (setupModeCallback) {
+            setupModeCallback();
+        }
         APStart();
     }
 }
