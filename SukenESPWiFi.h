@@ -30,7 +30,7 @@ private:
     String apip;
     DNSServer dnsServer;
     TaskHandle_t thp[16];
-    DynamicJsonDocument WiFiList;
+    JsonDocument WiFiList;
     WiFiClientSecure client;
     int a;
     

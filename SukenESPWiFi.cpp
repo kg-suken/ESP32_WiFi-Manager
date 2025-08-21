@@ -10,7 +10,6 @@ SukenESPWiFi::SukenESPWiFi(const String& deviceName) :
     server(80),
     apIP(192, 168, 1, 100),
     apip("192.168.1.100"),
-    WiFiList(512),
     a(0),
     useStaticIP(false),
     staticIP(192, 168, 1, 200),
@@ -518,7 +517,7 @@ void SukenESPWiFi::WiFiSettingAPI() {
     Serial.println(body);
     Serial.println("==========================");
 
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, body);
 
     if (error) {
