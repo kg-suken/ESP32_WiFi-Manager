@@ -1,9 +1,11 @@
 # SukenESPWiFi ライブラリ
 
-> [!WARNING]
-> **バージョン 3.0.0 以降の変更について**
+> [!NOTE]
+> **変更点（互換ポリシー）**
 > 
-> このバージョンでは、名前空間の導入やAPIの改善など、ライブラリの構造に大きな変更が加えられました。そのため、旧バージョンとの後方互換性はありません。アップデートの際はご注意ください。
+> - 既存スケッチの大半はそのまま動作します。保存済み設定の参照APIのみ、構造体ベースに統合されました（`getStoredCredentials()`, `getNetworkConfig()`）。
+> - 設定保存後は再起動せずにライブ適用されます（接続成功でAP停止、失敗でAP継続）。
+> - 切断時の自動セットアップ移行と、セットアップ中の自動再接続はデフォルトで有効です（無効化可能）。
 
 ESP32用の簡単WiFi設定ライブラリです。1行のインクルードと1行の初期化で、美しいWebインターフェースによるWiFi設定機能を提供します。
 
@@ -52,7 +54,16 @@ void setup() {
   // init()にデバイス名を渡すことで、APモード時の名前や、
   // ルーターに表示されるホスト名、mDNS名 (MyDevice.local) を設定できます。
   // ※デバイス名に使えるのは英数字とハイフンのみです。
+  // 1) 非ブロッキング（デフォルト）: 並行タスクを続けながら接続を待つ
   SukenWiFi.init("MyDevice");
+  // 2) ブロッキング: 設定/接続が完了するまで待つ
+  // SukenWiFi.initBlocking("MyDevice");
+
+  // オプション: 自動動作の制御
+  // 切断時に自動でセットアップへ入る（デフォルト: 有効）
+  // SukenWiFi.enableAutoSetupOnDisconnect(false);
+  // セットアップ中に保存済みWiFiへ自動再接続を試行（デフォルト: 有効）
+  // SukenWiFi.enableAutoReconnectDuringSetup(false);
 }
 
 void loop() {
@@ -87,12 +98,15 @@ void loop() {
 
 ### 詳細設定の使用例
 ```cpp
-// 保存された設定を参照
-Serial.println("Stored SSID: " + SukenWiFi.getStoredSSID());
-Serial.println("Use Static IP: " + String(SukenWiFi.getUseStaticIP() ? "Yes" : "No"));
-Serial.println("Static IP: " + SukenWiFi.getStaticIP());
-Serial.println("Gateway: " + SukenWiFi.getGateway());
-Serial.println("Primary DNS: " + SukenWiFi.getPrimaryDNS());
+// 保存された設定を参照（構造体で取得）
+auto creds = SukenWiFi.getStoredCredentials();
+auto cfg = SukenWiFi.getNetworkConfig();
+
+Serial.println("Stored SSID: " + creds.ssid);
+Serial.println("Use Static IP: " + String(cfg.useStaticIP ? "Yes" : "No"));
+Serial.println("Static IP: " + cfg.staticIP.toString());
+Serial.println("Gateway: " + cfg.gateway.toString());
+Serial.println("Primary DNS: " + cfg.primaryDNS.toString());
 ```
 
 ## API リファレンス
@@ -170,29 +184,11 @@ WiFi設定ファイルのみを削除します。
 
 ### 設定参照メソッド
 
-#### `String getStoredSSID()`
-保存されたSSIDを取得します。
+#### `WiFiCredentials getStoredCredentials() const`
+保存されたSSID/パスワードを構造体で取得します。
 
-#### `String getStoredPassword()`
-保存されたパスワードを取得します。
-
-#### `bool getUseStaticIP()`
-静的IP使用フラグを取得します。
-
-#### `String getStaticIP()`
-設定された静的IPアドレスを取得します。
-
-#### `String getGateway()`
-設定されたゲートウェイを取得します。
-
-#### `String getSubnet()`
-設定されたサブネットマスクを取得します。
-
-#### `String getPrimaryDNS()`
-設定された優先DNSを取得します。
-
-#### `String getSecondaryDNS()`
-設定された代替DNSを取得します。
+#### `NetworkConfig getNetworkConfig() const`
+保存されたネットワーク設定（静的IP、ゲートウェイ、DNS など）を構造体で取得します。
 
 #### `String getCurrentDNS()`
 現在使用中のDNSサーバーを取得します。
@@ -215,6 +211,7 @@ WiFi設定ファイルのみを削除します。
    - APモードを開始
    - WebサーバーとDNSサーバーを起動（キャプティブポータル）
    - mDNSを起動 (`デバイス名.local`)
+   - （デフォルト）5秒ごとに保存済みWiFiへの再接続を試行。成功するとAPを停止
 
 3. **WiFi接続成功時**:
    - クライアントとしてネットワークに参加
@@ -225,11 +222,12 @@ WiFi設定ファイルのみを削除します。
    - 自動的に設定ページが表示
    - 周囲のWiFi一覧が表示される
 
-5. **設定保存時**:
+5. **設定保存時（再起動なしのライブ適用）**:
    - ユーザーがSSIDとパスワードを入力
    - 詳細設定も含めて内部メモリに保存
-   - ESP32が再起動
-   - 保存された設定でWiFiに接続
+   - そのまま接続を試行（APは一時的に維持: WIFI_AP_STA）
+   - 接続に成功するとAPポータルを停止して `WIFI_STA` に移行
+   - 接続に失敗するとAPポータルを継続（設定をやり直し可能）
 
 ## カスタマイズ
 

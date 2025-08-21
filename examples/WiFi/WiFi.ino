@@ -23,12 +23,14 @@ void setup() {
 
     SukenWiFi.init("MyDevice"); // デバイス名を指定して初期化
     
-    // 現在の設定を確認
-    Serial.println("Stored SSID: " + SukenWiFi.getStoredSSID());
-    Serial.println("Use Static IP: " + String(SukenWiFi.getUseStaticIP() ? "Yes" : "No"));
-    Serial.println("Static IP: " + SukenWiFi.getStaticIP());
-    Serial.println("Gateway: " + SukenWiFi.getGateway());
-    Serial.println("Primary DNS: " + SukenWiFi.getPrimaryDNS());
+    // 現在の設定を確認（構造体で取得）
+    auto creds = SukenWiFi.getStoredCredentials();
+    auto cfg = SukenWiFi.getNetworkConfig();
+    Serial.println("Stored SSID: " + creds.ssid);
+    Serial.println(String("Use Static IP: ") + (cfg.useStaticIP ? "Yes" : "No"));
+    Serial.println("Static IP: " + cfg.staticIP.toString());
+    Serial.println("Gateway: " + cfg.gateway.toString());
+    Serial.println("Primary DNS: " + cfg.primaryDNS.toString());
     
     // 包括的なネットワーク情報を表示
     Serial.println(SukenWiFi.getNetworkInfo());
@@ -44,13 +46,13 @@ void serialEvent() {
         command.trim();
         if (command == "clear all") {
             SukenWiFi.clearAllSettings();
-            Serial.println("All settings cleared. Please restart the device.");
+            Serial.println("All settings cleared. You can reconfigure via AP portal.");
         } else if (command == "clear wifi") {
             SukenWiFi.clearWiFiSettings();
-            Serial.println("WiFi settings cleared. Please restart the device.");
+            Serial.println("WiFi settings cleared. You can reconfigure via AP portal.");
         } else if (command == "clear network") {
             SukenWiFi.clearNetworkSettings();
-            Serial.println("Network settings cleared. Please restart the device.");
+            Serial.println("Network settings cleared. You can reconfigure via AP portal.");
         }
     }
 }
