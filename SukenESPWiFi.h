@@ -63,6 +63,8 @@ public:
     void onClientConnect(CallbackFunction callback);
     void onEnterSetupMode(CallbackFunction callback);
     void onDisconnect(CallbackFunction callback);
+    void onConnected(CallbackFunction callback);      // GOT_IP 時に発火（初回/再接続問わず）
+    void onReconnected(CallbackFunction callback);    // 再接続時のみ発火
     
     // 設定管理
     void clearAllSettings();
@@ -125,6 +127,8 @@ private:
     CallbackFunction clientConnectedCallback_;
     CallbackFunction setupModeCallback_;
     CallbackFunction disconnectedCallback_;
+    CallbackFunction connectedCallback_;
+    CallbackFunction reconnectedCallback_;
     
     // 内部メソッド
     void startAccessPoint();
@@ -171,6 +175,8 @@ private:
     bool autoReconnectDuringSetup_ = true;
     uint8_t disconnectRetryAttemptsBeforeAP_ = 6; // 約3秒（500ms * 6）
     uint32_t disconnectRetryDelayMs_ = 500;
+    bool wasEverConnected_ = false;
+    bool disconnectedSinceLastConnect_ = false;
 };
 
 // 便利なマクロ - より安全な実装

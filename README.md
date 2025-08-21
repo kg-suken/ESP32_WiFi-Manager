@@ -171,6 +171,32 @@ void setup() {
 }
 ```
 
+#### `void onConnected(std::function<void()> callback)`
+WiFi が IP を取得したタイミング（初回接続/再接続を問わず）で呼び出されます。サービス起動などの汎用処理に向いています。
+```cpp
+void onConnectedCb() {
+  Serial.println("Connected (GOT_IP)");
+}
+
+void setup() {
+  SukenWiFi.onConnected(onConnectedCb);
+  SukenWiFi.init("MyDevice");
+}
+```
+
+#### `void onReconnected(std::function<void()> callback)`
+一度接続済みになった後に切断→再接続したときだけ呼び出されます。MQTT再購読やセッション復元などに適しています。
+```cpp
+void onReconnectedCb() {
+  Serial.println("Reconnected to WiFi");
+}
+
+void setup() {
+  SukenWiFi.onReconnected(onReconnectedCb);
+  SukenWiFi.init("MyDevice");
+}
+```
+
 ### 設定管理メソッド
 
 #### `void clearAllSettings()`

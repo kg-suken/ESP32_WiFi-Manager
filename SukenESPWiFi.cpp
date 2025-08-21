@@ -40,6 +40,14 @@ void SukenESPWiFi::onDisconnect(CallbackFunction callback) {
     disconnectedCallback_ = std::move(callback);
 }
 
+void SukenESPWiFi::onConnected(CallbackFunction callback) {
+    connectedCallback_ = std::move(callback);
+}
+
+void SukenESPWiFi::onReconnected(CallbackFunction callback) {
+    reconnectedCallback_ = std::move(callback);
+}
+
 void SukenESPWiFi::init(const String& deviceName) {
     if (deviceName != "") {
         setDeviceName(deviceName);
@@ -54,6 +62,12 @@ void SukenESPWiFi::init() {
             if (clientConnectedCallback_) clientConnectedCallback_();
         } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
             Serial.println("WiFi connected (GOT_IP)");
+            if (!wasEverConnected_) wasEverConnected_ = true;
+            if (connectedCallback_) connectedCallback_();
+            if (disconnectedSinceLastConnect_) {
+                disconnectedSinceLastConnect_ = false;
+                if (reconnectedCallback_) reconnectedCallback_();
+            }
             // 接続回復時にAPが残っていれば停止する
             if (setupMode_) {
                 Serial.println("Exiting setup mode due to successful connection.");
@@ -63,6 +77,7 @@ void SukenESPWiFi::init() {
         } else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
             Serial.println("WiFi disconnected");
             if (disconnectedCallback_) disconnectedCallback_();
+            if (wasEverConnected_) disconnectedSinceLastConnect_ = true;
             if (autoSetupOnDisconnect_) {
                 if (reconnectTaskHandle_ == nullptr) {
                     xTaskCreatePinnedToCore(SukenESPWiFi::reconnectTask, "SukenWiFi_Reconnect", 4096, this, 1, &reconnectTaskHandle_, TASK_CORE);
